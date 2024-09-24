@@ -11,14 +11,14 @@ This repository provides examples for how to achieve different outcomes targeted
 
 ### Using Docker
 
-* [jrokeach/crr/docker/persistent_nftables](docker/persistent_nftables)
+* [jrokeach/crr/docker/crpd_persistent_nftables](docker/crpd_persistent_nftables)
   * Juniper cRPD
   * `nftables` for container-level firewall
     * Configured via `docker compose` `volume` `bind` mount of file in same directory
     * `nftables` changes in running container can be saved to persistent storage, with limitations
   * `docker compose` style initialization
   * Layer 2 connectivity to physical network via dedicated interfaces from host VM/BMS
-* [jrokeach/crr/docker/static_nftables](docker/static_nftables)
+* [jrokeach/crr/docker/crpd_static_nftables](docker/crpd_static_nftables)
   * Juniper cRPD
   * `nftables` for container-level firewall
     * Configured via `docker compose` `config` stanza
