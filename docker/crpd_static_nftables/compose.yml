@@ -1,0 +1,79 @@
+name: rr
+
+services:
+  crpd:
+    image: crpd:24.2R1.14
+    entrypoint: /sbin/runit_init.sh
+    privileged: true
+    networks:
+      - rr-p1
+      - rr-p2
+    volumes:
+      - config:/config
+      - varlog:/var/log
+    configs:
+      - source: runit_init_sh
+        target: /sbin/runit_init.sh
+        mode: 0755
+      - source: nftables_conf
+        target: /etc/nftables.conf
+
+networks:
+  rr-p1:
+    driver: macvlan
+    driver_opts:
+      parent: eth1
+    ipam:
+      config:
+        - subnet: "10.200.100.242/31"
+          ip_range: "10.200.100.243/32"
+          gateway: "10.200.100.242"
+  rr-p2:
+    driver: macvlan
+    driver_opts:
+      parent: eth2
+    ipam:
+      config:
+        - subnet: "10.200.100.244/31"
+          ip_range: "10.200.100.245/32"
+          gateway: "10.200.100.244"
+
+volumes:
+  config:
+  varlog:
+
+configs:
+  runit_init_sh:
+    content: |
+      #!/bin/sh
+
+      export > /etc/envvars
+
+      # Load nftables rules
+      /usr/sbin/nft -f /etc/nftables.conf
+
+      exec /sbin/runit-init 0
+  nftables_conf:
+    content: |
+      table inet filter {
+          set BGPAllowed {
+              typeof ip saddr
+              flags interval
+              elements = { 10.200.100.0/24 }
+          }
+          chain input {
+              type filter hook input priority 0; policy accept;
+              ct state established,related accept comment "allow established"
+              ct state invalid drop comment "drop invalid"
+              ip protocol icmp limit rate 4/second accept comment "accept and police ICMP"
+              ip saddr @BGPAllowed tcp dport 179 accept comment "accept bgp from allowed networks"
+              tcp dport 179 drop comment "drop bgp"
+          }
+          chain forward {
+              type filter hook forward priority 0;
+          }
+          chain output {
+              type filter hook output priority 0; policy accept;
+              ip protocol tcp tcp sport 22 ip dscp set cs2 comment "mark outbound packets from inbound ssh as CS2"
+          }
+      }
