@@ -11,6 +11,9 @@ docker exec -it rr-crpd-1 cli
 ```
 
 ```
+request system license add terminal
+# Paste license, CTRL+D
+
 configure
 
 set system services ssh root-login deny
@@ -24,4 +27,5 @@ set protocols ospf area 0.0.0.0 interface eth1 interface-type p2p
 set protocols ospf area 0.0.0.0 interface eth0 interface-type p2p
 
 commit and-quit
+exit
 ```
